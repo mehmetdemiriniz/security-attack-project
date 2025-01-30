@@ -1,0 +1,148 @@
+rules:
+  # Parola Politikaları
+  - id: "AUTH-001"
+    title: "Minimum Parola Uzunluğu"
+    description: "Minimum parola uzunluğu en az 12 karakter olmalıdır"
+    category: "kimlik_doğrulama"
+    level: "yüksek"
+    check_command: "grep '^PASS_MIN_LEN' /etc/login.defs"
+    expected_value: "/^PASS_MIN_LEN\\s+([1-9][2-9]|[2-9][0-9]|[1-9][0-9][0-9]+)/"
+    remediation: "PASS_MIN_LEN parametresini /etc/login.defs dosyasında 12 veya daha yüksek bir değere ayarlayın"
+    references:
+      - "CIS Benchmark 5.3.1"
+      - "NIST SP 800-53 IA-5"
+
+  - id: "AUTH-002"
+    title: "Parola Karmaşıklığı"
+    description: "Parolalar büyük/küçük harf, rakam ve özel karakter içermelidir"
+    category: "kimlik_doğrulama"
+    level: "yüksek"
+    check_command: "grep '^password.*pam_pwquality.so' /etc/pam.d/system-auth"
+    expected_value: "/^password\\s+requisite\\s+pam_pwquality\\.so.*minlen=12.*dcredit=-1.*ucredit=-1.*lcredit=-1.*ocredit=-1/"
+    remediation: "pam_pwquality.so modülünü /etc/pam.d/system-auth dosyasında yapılandırın"
+    references:
+      - "CIS Benchmark 5.3.2"
+      - "NIST SP 800-53 IA-5(1)"
+
+  # Dosya Sistemi Güvenliği
+  - id: "FS-001"
+    title: "/tmp Dizini Ayrı Bölümde"
+    description: "/tmp dizini ayrı bir bölümde olmalıdır"
+    category: "sistem_sertleştirme"
+    level: "orta"
+    check_command: "mount | grep '/tmp '"
+    expected_value: "/^.*\\s+on\\s+\\/tmp\\s+type\\s+/"
+    remediation: "/tmp dizini için ayrı bir bölüm oluşturun ve fstab'a ekleyin"
+    references:
+      - "CIS Benchmark 1.1.2"
+
+  - id: "FS-002"
+    title: "SUID/SGID Dosyaları"
+    description: "Gereksiz SUID/SGID biti olan dosyalar tespit edilmelidir"
+    category: "sistem_sertleştirme"
+    level: "yüksek"
+    check_command: "find {target} -type f \\( -perm -4000 -o -perm -2000 \\) -exec ls -l {} \\;"
+    expected_value: ""
+    remediation: "Gereksiz SUID/SGID bitlerini kaldırın: chmod u-s,g-s <dosya>"
+    references:
+      - "CIS Benchmark 6.1.13"
+      - "NIST SP 800-53 CM-7"
+
+  # Ağ Güvenliği
+  - id: "NET-001"
+    title: "IPv4 IP Forwarding Devre Dışı"
+    description: "IPv4 IP forwarding devre dışı bırakılmalıdır"
+    category: "ağ_güvenliği"
+    level: "orta"
+    check_command: "sysctl net.ipv4.ip_forward"
+    expected_value: "net.ipv4.ip_forward = 0"
+    remediation: "net.ipv4.ip_forward parametresini /etc/sysctl.conf dosyasında 0 olarak ayarlayın"
+    references:
+      - "CIS Benchmark 3.1.1"
+      - "NIST SP 800-53 SC-7"
+
+  - id: "NET-002"
+    title: "ICMP Redirects Devre Dışı"
+    description: "ICMP redirects devre dışı bırakılmalıdır"
+    category: "ağ_güvenliği"
+    level: "orta"
+    check_command: "sysctl net.ipv4.conf.all.accept_redirects"
+    expected_value: "net.ipv4.conf.all.accept_redirects = 0"
+    remediation: "net.ipv4.conf.all.accept_redirects parametresini /etc/sysctl.conf dosyasında 0 olarak ayarlayın"
+    references:
+      - "CIS Benchmark 3.2.2"
+      - "NIST SP 800-53 SC-7"
+
+  # Loglama ve Denetim
+  - id: "LOG-001"
+    title: "Audit Servisi Aktif"
+    description: "Audit (auditd) servisi aktif ve çalışır durumda olmalıdır"
+    category: "loglama"
+    level: "yüksek"
+    check_command: "systemctl is-active auditd"
+    expected_value: "active"
+    remediation: "auditd servisini etkinleştirin ve başlatın: systemctl enable auditd && systemctl start auditd"
+    references:
+      - "CIS Benchmark 4.1.1.1"
+      - "NIST SP 800-53 AU-2"
+
+  - id: "LOG-002"
+    title: "Audit Log Depolama Boyutu"
+    description: "Audit log depolama boyutu yeterli olmalıdır"
+    category: "loglama"
+    level: "orta"
+    check_command: "grep '^max_log_file\\s*=' /etc/audit/auditd.conf"
+    expected_value: "/^max_log_file\\s*=\\s*(8|9|[1-9][0-9]+)/"
+    remediation: "max_log_file parametresini /etc/audit/auditd.conf dosyasında en az 8 olarak ayarlayın"
+    references:
+      - "CIS Benchmark 4.1.1.2"
+      - "NIST SP 800-53 AU-4"
+
+  # Servis Güvenliği
+  - id: "SVC-001"
+    title: "Gereksiz Servisler Devre Dışı"
+    description: "Gereksiz servisler devre dışı bırakılmalıdır"
+    category: "sistem_sertleştirme"
+    level: "yüksek"
+    check_command: "systemctl list-unit-files --type=service --state=enabled"
+    expected_value: "/^(sshd|auditd|chronyd|crond|firewalld|syslog|rsyslog)\\.service/"
+    remediation: "Gereksiz servisleri devre dışı bırakın: systemctl disable <servis>"
+    references:
+      - "CIS Benchmark 2.2"
+      - "NIST SP 800-53 CM-7"
+
+  - id: "SVC-002"
+    title: "X Window System Devre Dışı"
+    description: "X Window System gereksizse devre dışı bırakılmalıdır"
+    category: "sistem_sertleştirme"
+    level: "orta"
+    check_command: "systemctl is-enabled xorg.service 2>/dev/null || echo 'not-found'"
+    expected_value: "not-found"
+    remediation: "X Window System'i kaldırın veya devre dışı bırakın"
+    references:
+      - "CIS Benchmark 2.2.2"
+
+  # Güvenlik Duvarı
+  - id: "FW-001"
+    title: "Firewall Servisi Aktif"
+    description: "Firewall servisi aktif ve çalışır durumda olmalıdır"
+    category: "ağ_güvenliği"
+    level: "kritik"
+    check_command: "systemctl is-active firewalld"
+    expected_value: "active"
+    remediation: "firewalld servisini etkinleştirin ve başlatın: systemctl enable firewalld && systemctl start firewalld"
+    references:
+      - "CIS Benchmark 3.6"
+      - "NIST SP 800-53 SC-7"
+
+  - id: "FW-002"
+    title: "Varsayılan Firewall Politikası"
+    description: "Varsayılan firewall politikası DROP olmalıdır"
+    category: "ağ_güvenliği"
+    level: "yüksek"
+    check_command: "firewall-cmd --get-default-zone"
+    expected_value: "drop"
+    remediation: "Varsayılan firewall politikasını DROP olarak ayarlayın"
+    references:
+      - "CIS Benchmark 3.6.2"
+      - "NIST SP 800-53 SC-7(5)" 

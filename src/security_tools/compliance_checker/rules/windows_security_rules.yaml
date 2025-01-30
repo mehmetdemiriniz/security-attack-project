@@ -1,0 +1,142 @@
+rules:
+  # Parola Politikaları
+  - id: "WIN-AUTH-001"
+    title: "Minimum Parola Uzunluğu"
+    description: "Minimum parola uzunluğu en az 14 karakter olmalıdır"
+    category: "kimlik_doğrulama"
+    level: "yüksek"
+    check_command: "Get-ADDefaultDomainPasswordPolicy | Select-Object MinPasswordLength"
+    expected_value: "MinPasswordLength : 14"
+    remediation: "Group Policy üzerinden Minimum Password Length değerini 14 olarak ayarlayın"
+    references:
+      - "CIS Microsoft Windows Server 2019 Benchmark v1.2.0 - 1.1.5"
+      - "NIST SP 800-53 IA-5"
+
+  - id: "WIN-AUTH-002"
+    title: "Parola Karmaşıklığı"
+    description: "Parolalar karmaşıklık gereksinimlerini karşılamalıdır"
+    category: "kimlik_doğrulama"
+    level: "yüksek"
+    check_command: "Get-ADDefaultDomainPasswordPolicy | Select-Object ComplexityEnabled"
+    expected_value: "ComplexityEnabled : True"
+    remediation: "Group Policy üzerinden Password must meet complexity requirements seçeneğini etkinleştirin"
+    references:
+      - "CIS Microsoft Windows Server 2019 Benchmark v1.2.0 - 1.1.6"
+      - "NIST SP 800-53 IA-5(1)"
+
+  # Hesap Kilitleme
+  - id: "WIN-LOCK-001"
+    title: "Hesap Kilitleme Eşiği"
+    description: "Hesap kilitleme eşiği en fazla 5 başarısız giriş denemesi olmalıdır"
+    category: "kimlik_doğrulama"
+    level: "yüksek"
+    check_command: "Get-ADDefaultDomainPasswordPolicy | Select-Object LockoutThreshold"
+    expected_value: "LockoutThreshold : 5"
+    remediation: "Group Policy üzerinden Account lockout threshold değerini 5 olarak ayarlayın"
+    references:
+      - "CIS Microsoft Windows Server 2019 Benchmark v1.2.0 - 1.2.1"
+      - "NIST SP 800-53 AC-7"
+
+  # Denetim Politikaları
+  - id: "WIN-AUDIT-001"
+    title: "Başarılı/Başarısız Oturum Açma Denetimi"
+    description: "Başarılı ve başarısız oturum açma girişimleri denetlenmelidir"
+    category: "denetim"
+    level: "yüksek"
+    check_command: "auditpol /get /category:\"Logon/Logoff\""
+    expected_value: "Success and Failure"
+    remediation: "Group Policy üzerinden Audit Logon Events için Success ve Failure denetimini etkinleştirin"
+    references:
+      - "CIS Microsoft Windows Server 2019 Benchmark v1.2.0 - 17.5"
+      - "NIST SP 800-53 AU-2"
+
+  # Güvenlik Duvarı
+  - id: "WIN-FW-001"
+    title: "Windows Defender Firewall Durumu"
+    description: "Windows Defender Firewall tüm profillerde etkin olmalıdır"
+    category: "ağ_güvenliği"
+    level: "kritik"
+    check_command: "Get-NetFirewallProfile -All | Select-Object Name,Enabled"
+    expected_value: "Enabled : True"
+    remediation: "Windows Defender Firewall'u tüm profiller için etkinleştirin"
+    references:
+      - "CIS Microsoft Windows Server 2019 Benchmark v1.2.0 - 9.1"
+      - "NIST SP 800-53 SC-7"
+
+  # Windows Defender
+  - id: "WIN-AV-001"
+    title: "Windows Defender Durumu"
+    description: "Windows Defender aktif ve güncel olmalıdır"
+    category: "kötücül_yazılım"
+    level: "kritik"
+    check_command: "Get-MpComputerStatus | Select-Object AMServiceEnabled,AntispywareEnabled,AntivirusEnabled"
+    expected_value: "True"
+    remediation: "Windows Defender'ı etkinleştirin ve güncelleyin"
+    references:
+      - "CIS Microsoft Windows Server 2019 Benchmark v1.2.0 - 18.9.45"
+      - "NIST SP 800-53 SI-3"
+
+  # Uzak Masaüstü
+  - id: "WIN-RDP-001"
+    title: "RDP Network Level Authentication"
+    description: "RDP bağlantıları için Network Level Authentication zorunlu olmalıdır"
+    category: "uzak_erişim"
+    level: "yüksek"
+    check_command: "Get-ItemProperty 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp' -Name UserAuthentication"
+    expected_value: "UserAuthentication : 1"
+    remediation: "System Properties > Remote > Allow connections only from computers running Remote Desktop with Network Level Authentication seçeneğini etkinleştirin"
+    references:
+      - "CIS Microsoft Windows Server 2019 Benchmark v1.2.0 - 9.4"
+      - "NIST SP 800-53 AC-17"
+
+  # Sistem Güncellemeleri
+  - id: "WIN-UPD-001"
+    title: "Windows Update Durumu"
+    description: "Windows Update servisi etkin ve otomatik olmalıdır"
+    category: "sistem_güncellemeleri"
+    level: "yüksek"
+    check_command: "Get-Service wuauserv | Select-Object Status,StartType"
+    expected_value: "Running,Automatic"
+    remediation: "Windows Update servisini etkinleştirin ve Automatic olarak ayarlayın"
+    references:
+      - "CIS Microsoft Windows Server 2019 Benchmark v1.2.0 - 18.9.102"
+      - "NIST SP 800-53 SI-2"
+
+  # Paylaşım Güvenliği
+  - id: "WIN-SHARE-001"
+    title: "Varsayılan Paylaşımlar"
+    description: "Gereksiz varsayılan paylaşımlar devre dışı bırakılmalıdır"
+    category: "sistem_sertleştirme"
+    level: "orta"
+    check_command: "Get-SmbShare | Where-Object {$_.Name -match '^[A-Z]\\$$'}"
+    expected_value: ""
+    remediation: "Gereksiz varsayılan paylaşımları kaldırın"
+    references:
+      - "CIS Microsoft Windows Server 2019 Benchmark v1.2.0 - 9.2"
+      - "NIST SP 800-53 AC-3"
+
+  # BitLocker
+  - id: "WIN-BL-001"
+    title: "BitLocker Durumu"
+    description: "Sistem sürücüsü BitLocker ile şifrelenmelidir"
+    category: "şifreleme"
+    level: "yüksek"
+    check_command: "Get-BitLockerVolume -MountPoint C: | Select-Object ProtectionStatus"
+    expected_value: "On"
+    remediation: "BitLocker'ı sistem sürücüsü için etkinleştirin"
+    references:
+      - "CIS Microsoft Windows Server 2019 Benchmark v1.2.0 - 18.9.11"
+      - "NIST SP 800-53 SC-28"
+
+  # UAC
+  - id: "WIN-UAC-001"
+    title: "UAC Durumu"
+    description: "User Account Control (UAC) etkin olmalıdır"
+    category: "erişim_kontrolü"
+    level: "yüksek"
+    check_command: "Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System -Name EnableLUA"
+    expected_value: "EnableLUA : 1"
+    remediation: "User Account Control Settings üzerinden UAC'yi etkinleştirin"
+    references:
+      - "CIS Microsoft Windows Server 2019 Benchmark v1.2.0 - 2.3.17"
+      - "NIST SP 800-53 AC-6" 
