@@ -1,4 +1,4 @@
-# ��️ İleri Sızma Testi Projesi
+# İleri Sızma Testi Projesi
 
 ## 📝 Proje Hakkında
 Bu proje, web uygulamalarında yaygın olarak karşılaşılan güvenlik açıklarını otomatik olarak tespit etmek için geliştirilmiş bir güvenlik tarama aracıdır. Şu anda aşağıdaki tarayıcıları içermektedir:
